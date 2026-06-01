@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Tastia Restaurant Staff Directory</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--red);min-height:100vh;}
+
+:root{
+  --red:#B71C1C;--red-mid:#8B1010;--red-light:#FFF0F0;
+  --dark:#1A1A1A;--dark-mid:#2D2020;
+  --ink:#1A1A1A;--ink-mid:#5A3030;--ink-muted:#9A7070;
+  --border:#F0DEDE;--bg:#FFF9F5;
+  --inactive-bg:#FDE8E8;--inactive-text:#B71C1C;
+  --font-heading:'Poppins',sans-serif;
+  --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
+  --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
+}
+
+/* ══ LAYOUT ══ */
+.layout{display:flex;flex-direction:column;min-height:100vh;}
+
+/* ── TOP NAV ── */
+.top-nav{
+  background:white;
+  height:72px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 24px;
+  box-shadow:0 1px 0 rgba(0,0,0,0.06);
+  animation:nav-in 0.5s var(--ease-out-expo) both;
+}
+@keyframes nav-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.top-nav-logo{
+  height:52px;width:auto;max-width:200px;
+  object-fit:contain;display:block;
+}
+.top-nav-fallback{
+  font-family:var(--font-heading);font-size:20px;font-weight:700;
+  color:var(--red);letter-spacing:1.5px;
+}
+
+/* ── FORM PANEL ── */
+.form-panel{
+  flex:1;background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  padding:40px 24px 56px;
+}
+
+/* ── CARD ── */
+.card{
+  background:white;border-radius:20px;
+  box-shadow:0 8px 48px rgba(0,0,0,0.22),0 2px 8px rgba(0,0,0,0.12);
+  width:100%;max-width:420px;overflow:hidden;position:relative;
+  animation:card-rise 0.55s var(--ease-out-expo) 0.15s both;
+}
+@keyframes card-rise{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.card.exit{animation:card-exit 0.4s var(--ease-out-quart) forwards !important;}
+@keyframes card-exit{to{opacity:0;transform:translateY(-12px) scale(0.97);}}
+
+/* ── FORM HEADER ── */
+.form-header{padding:44px 40px 32px;text-align:center;border-bottom:1.5px solid #F5EAEA;}
+.lock-icon{
+  width:68px;height:68px;background:var(--red-light);border-radius:18px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;font-size:30px;
+  animation:icon-breathe 3.5s ease-in-out infinite;
+}
+@keyframes icon-breathe{
+  0%,100%{box-shadow:0 0 0 0 rgba(183,28,28,0);}
+  50%{box-shadow:0 0 0 10px rgba(183,28,28,0.08);}
+}
+.card-title{font-family:var(--font-heading);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px;letter-spacing:0.5px;}
+.card-sub{font-size:13.5px;color:var(--ink-muted);line-height:1.5;}
+.card-body{padding:28px 40px 40px;}
+
+/* ── MODES ── */
+.mode{display:none;}
+.mode.active{display:block;animation:mode-fade 0.3s var(--ease-out-expo);}
+@keyframes mode-fade{from{opacity:0;}to{opacity:1;}}
+
+/* ── STEP INDICATOR ── */
+.steps-wrap{display:flex;align-items:flex-start;justify-content:center;margin-bottom:28px;}
+.step-item{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;width:72px;}
+.step-connector{width:48px;flex-shrink:0;height:2px;background:#F0DEDE;margin-top:15px;transition:background 0.4s ease;}
+.step-connector.done{background:var(--red);}
+.step-dot{
+  width:30px;height:30px;border-radius:50%;background:var(--red-light);color:var(--ink-muted);
+  font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;
+  border:2px solid #F0DEDE;flex-shrink:0;
+  transition:background 0.3s,border-color 0.3s,color 0.3s,transform 0.25s var(--ease-out-expo);
+}
+.step-dot.active{background:var(--red);color:white;border-color:var(--red);}
+.step-dot.done{background:var(--red-mid);color:white;border-color:var(--red-mid);animation:dot-complete 0.35s var(--ease-out-expo);}
+@keyframes dot-complete{0%{transform:scale(1);}45%{transform:scale(1.28);}100%{transform:scale(1);}}
+.step-label{font-size:10px;font-weight:700;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.5px;text-align:center;transition:color 0.25s;white-space:nowrap;}
+.step-label.active{color:var(--red);}
+
+/* ── STEP TRANSITIONS ── */
+.step-in{animation:step-slide-in 0.28s var(--ease-out-expo);}
+@keyframes step-slide-in{from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:translateX(0);}}
+
+/* ── FIELDS ── */
+.field-group{margin-bottom:22px;}
+.field-label{font-size:12px;font-weight:700;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:7px;display:block;}
+.field-wrap{position:relative;}
+.field-input{
+  width:100%;padding:13px 44px 13px 16px;
+  border:1.5px solid var(--border);border-radius:10px;
+  font-size:14px;font-family:'Nunito Sans',sans-serif;color:var(--ink);
+  background:white;outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
+}
+.field-input.no-icon{padding-right:16px;}
+.field-input:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(183,28,28,0.10);}
+.field-input.input-error{border-color:#e53935;background:#fff5f5;}
+.toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--ink-muted);padding:4px;transition:color 0.15s;}
+.toggle-pw:hover{color:var(--ink-mid);}
+.field-hint{font-size:11px;color:var(--ink-muted);margin-top:6px;line-height:1.5;}
+
+/* ── OTP BOXES ── */
+.otp-row{display:flex;gap:10px;justify-content:center;margin:24px 0;}
+.otp-box{
+  width:46px;height:56px;border:1.5px solid var(--border);border-radius:10px;
+  font-size:22px;font-weight:700;text-align:center;color:var(--ink);
+  background:white;outline:none;font-family:'Nunito Sans',sans-serif;
+  transition:border-color 0.2s,background 0.2s,box-shadow 0.2s;
+}
+.otp-box:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(183,28,28,0.10);}
+.otp-box.filled{border-color:var(--red);background:var(--red-light);animation:otp-pop 0.14s var(--ease-out-expo);}
+.otp-box.input-error{border-color:#e53935;background:#fff5f5;}
+@keyframes otp-pop{0%{transform:scale(1);}50%{transform:scale(1.13);}100%{transform:scale(1);}}
+.otp-box.wave{animation:otp-wave 0.45s var(--ease-out-expo);}
+@keyframes otp-wave{0%,100%{transform:translateY(0);}40%{transform:translateY(-7px);}}
+.otp-row.shake{animation:row-shake 0.42s var(--ease-out-quart);}
+@keyframes row-shake{0%,100%{transform:translateX(0);}18%{transform:translateX(-7px);}36%{transform:translateX(7px);}54%{transform:translateX(-5px);}72%{transform:translateX(5px);}}
+
+/* ── STRENGTH BAR ── */
+.strength-bar{height:4px;border-radius:4px;background:var(--red-light);margin-top:8px;overflow:hidden;}
+.strength-fill{height:100%;border-radius:4px;width:100%;transform:scaleX(0);transform-origin:left center;transition:transform 0.35s var(--ease-out-expo),background 0.35s ease;}
+
+/* ── MESSAGES ── */
+.error-msg{font-size:12px;color:#c62828;margin-top:10px;font-weight:600;padding:10px 12px;background:#fde8e8;border-radius:8px;display:none;}
+.error-msg.show{display:block;animation:msg-in 0.22s var(--ease-out-expo);}
+.info-msg{font-size:12px;color:var(--red-mid);margin-top:10px;font-weight:600;padding:10px 12px;background:var(--red-light);border-radius:8px;display:none;line-height:1.5;}
+.info-msg.show{display:block;animation:msg-in 0.22s var(--ease-out-expo);}
+@keyframes msg-in{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── BUTTONS ── */
+.btn-submit{
+  width:100%;background:var(--red);color:white;border:none;
+  padding:15px;border-radius:10px;font-size:15px;font-weight:700;
+  font-family:'Nunito Sans',sans-serif;cursor:pointer;margin-top:8px;
+  transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
+  letter-spacing:0.5px;position:relative;overflow:hidden;
+  text-transform:uppercase;
+}
+.btn-submit:not(:disabled):hover{background:var(--red-mid);transform:translateY(-1px);box-shadow:0 6px 20px rgba(183,28,28,0.32);}
+.btn-submit:not(:disabled):active{transform:translateY(0) scale(0.98);box-shadow:none;}
+.btn-submit:disabled{background:#E5A0A4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-submit.loading{background:#E5A0A4;cursor:not-allowed;}
+.btn-submit.loading::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.35) 50%,transparent 100%);
+  background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer{from{background-position:200% center;}to{background-position:-200% center;}}
+
+.btn-ghost{
+  width:100%;background:transparent;color:var(--red);
+  border:1.5px solid var(--border);padding:11px;border-radius:10px;
+  font-size:13px;font-weight:600;font-family:'Nunito Sans',sans-serif;
+  cursor:pointer;margin-top:8px;
+  transition:background 0.15s,border-color 0.15s,transform 0.1s;
+}
+.btn-ghost:not(:disabled):hover{background:var(--red-light);border-color:var(--red);transform:translateY(-1px);}
+.btn-ghost:not(:disabled):active{transform:translateY(0);}
+.btn-ghost:disabled{color:#E5A0A4;border-color:#F0DEDE;cursor:not-allowed;}
+
+.divider{border:none;border-top:1.5px solid #F5EAEA;margin:24px 0;}
+.bottom-note{text-align:center;font-size:12px;color:var(--ink-muted);line-height:1.6;}
+.bottom-note strong{color:var(--red);cursor:pointer;text-decoration:underline;transition:color 0.15s;}
+.bottom-note strong:hover{color:var(--red-mid);}
+.email-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-light);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--ink-mid);font-weight:600;margin-bottom:4px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .top-nav{height:60px;}
+  .top-nav-logo{height:42px;}
+  .form-panel{padding:24px 16px 48px;align-items:flex-start;padding-top:28px;}
+  .form-header{padding:28px 24px 20px;}
+  .card-body{padding:20px 24px 28px;}
+}
+@media(prefers-reduced-motion:reduce){
+  *,::before,::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- TOP NAV -->
+  <header class="top-nav">
+    <img src="Tastia-Restaurant-Logo.png" class="top-nav-logo" alt="Tastia Restaurant"
+         onerror="this.outerHTML='<span class=top-nav-fallback>TASTIA</span>'">
+  </header>
+
+  <!-- FORM PANEL -->
+  <main class="form-panel">
+    <div class="card">
+
+      <div class="form-header">
+        <div class="lock-icon" id="header-icon">🔐</div>
+        <div class="card-title" id="card-title">Create Admin Account</div>
+        <div class="card-sub" id="card-sub">Tastia Staff Directory</div>
+      </div>
+
+      <div class="card-body">
+
+        <!-- SETUP MODE -->
+        <div class="mode" id="mode-setup">
+          <div class="steps-wrap">
+            <div class="step-item">
+              <div class="step-dot active" id="dot-1">1</div>
+              <span class="step-label active" id="lbl-1">Email</span>
+            </div>
+            <div class="step-connector" id="line-1"></div>
+            <div class="step-item">
+              <div class="step-dot" id="dot-2">2</div>
+              <span class="step-label" id="lbl-2">Verify</span>
+            </div>
+            <div class="step-connector" id="line-2"></div>
+            <div class="step-item">
+              <div class="step-dot" id="dot-3">3</div>
+              <span class="step-label" id="lbl-3">Password</span>
+            </div>
+          </div>
+
+          <!-- Step 1 -->
+          <div id="setup-step-1">
+            <div class="field-group">
+              <label class="field-label">Admin Email Address</label>
+              <input class="field-input no-icon" type="email" id="setup-email"
+                     placeholder="admin@tastiarestaurantng.com"
+                     onkeydown="if(event.key==='Enter')sendOTP()">
+            </div>
+            <div class="info-msg" id="step1-info" aria-live="polite"></div>
+            <div class="error-msg" id="step1-error" role="alert"></div>
+            <button class="btn-submit" id="btn-send-otp" onclick="sendOTP()">Send Verification Code →</button>
+            <hr class="divider">
+            <div class="bottom-note">Already have an account? <strong onclick="showLogin()">Sign in here</strong></div>
+          </div>
+
+          <!-- Step 2 -->
+          <div id="setup-step-2" style="display:none">
+            <div style="text-align:center;margin-bottom:6px;">
+              <div class="email-badge">✉️ <span id="otp-email-display"></span></div>
+            </div>
+            <p style="font-size:13px;color:var(--ink-mid);text-align:center;margin-bottom:4px;line-height:1.6">
+              Enter the 6-digit code sent to your email.<br>
+              <span style="font-size:11px;color:var(--ink-muted)">Check your spam folder if you don't see it.</span>
+            </p>
+            <div class="otp-row">
+              <input class="otp-box" id="otp-0" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1 of 6">
+              <input class="otp-box" id="otp-1" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 2 of 6">
+              <input class="otp-box" id="otp-2" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 3 of 6">
+              <input class="otp-box" id="otp-3" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 4 of 6">
+              <input class="otp-box" id="otp-4" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 5 of 6">
+              <input class="otp-box" id="otp-5" type="text" inputmode="numeric" maxlength="1" aria-label="Digit 6 of 6">
+            </div>
+            <div class="error-msg" id="step2-error" role="alert"></div>
+            <div class="info-msg" id="step2-info" aria-live="polite"></div>
+            <button class="btn-submit" id="btn-verify-otp" onclick="verifyOTP()">Verify Code →</button>
+            <button class="btn-ghost" id="btn-resend" onclick="resendOTP()" disabled>
+              Resend code (<span id="resend-timer">60</span>s)
+            </button>
+            <hr class="divider">
+            <div class="bottom-note"><strong onclick="showStep(1)">← Change email</strong></div>
+          </div>
+
+          <!-- Step 3 -->
+          <div id="setup-step-3" style="display:none">
+            <p style="font-size:13px;color:var(--ink-mid);margin-bottom:18px;line-height:1.6">
+              ✅ Email verified. Now set a password for future sign-ins.
+            </p>
+            <div class="field-group">
+              <label class="field-label">Create Password</label>
+              <div class="field-wrap">
+                <input class="field-input" type="password" id="setup-pw"
+                       placeholder="Choose a strong password"
+                       oninput="checkStrength(this.value)"
+                       onkeydown="if(event.key==='Enter')setPassword()">
+                <button class="toggle-pw" type="button" onclick="togglePw('setup-pw',this)">👁</button>
+              </div>
+              <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+              <div class="field-hint" id="strength-label">Use 8+ characters with letters, numbers and symbols.</div>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Confirm Password</label>
+              <div class="field-wrap">
+                <input class="field-input" type="password" id="setup-pw2"
+                       placeholder="Repeat password"
+                       onkeydown="if(event.key==='Enter')setPassword()">
+                <button class="toggle-pw" type="button" onclick="togglePw('setup-pw2',this)">👁</button>
+              </div>
+            </div>
+            <div class="error-msg" id="step3-error" role="alert"></div>
+            <button class="btn-submit" id="btn-set-pw" onclick="setPassword()">Complete Setup →</button>
+          </div>
+        </div>
+
+        <!-- LOGIN MODE -->
+        <div class="mode" id="mode-login">
+          <div class="field-group">
+            <label class="field-label">Email Address</label>
+            <input class="field-input no-icon" type="email" id="login-email"
+                   placeholder="admin@tastiarestaurantng.com"
+                   onkeydown="if(event.key==='Enter')login()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Password</label>
+            <div class="field-wrap">
+              <input class="field-input" type="password" id="login-pw"
+                     placeholder="Enter your password"
+                     onkeydown="if(event.key==='Enter')login()">
+              <button class="toggle-pw" type="button" onclick="togglePw('login-pw',this)">👁</button>
+            </div>
+            <div class="error-msg" id="login-error" role="alert"></div>
+          </div>
+          <button class="btn-submit" id="btn-login" onclick="login()">Sign In →</button>
+          <hr class="divider">
+          <div class="bottom-note">No account yet? <strong onclick="showSetup()">Create admin account</strong></div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+  'YOUR_SUPABASE_URL',      // Replace: Supabase project URL
+  'YOUR_SUPABASE_ANON_KEY'  // Replace: Supabase anon/public key
+);
+
+let resendInterval = null;
+let isVerifying = false;
+
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) window.location.replace('index.html');
+  else initPage();
+});
+
+function initPage() {
+  const hasAccount = localStorage.getItem('tastia_admin_registered');
+  if (hasAccount) showLogin(); else showSetup();
+}
+
+function showLogin() {
+  document.getElementById('mode-setup').classList.remove('active');
+  document.getElementById('mode-login').classList.add('active');
+  document.getElementById('card-title').textContent = 'Welcome Back';
+  document.getElementById('card-sub').textContent = 'Sign in to access the Staff Directory';
+  document.getElementById('header-icon').textContent = '🔑';
+}
+function showSetup() {
+  document.getElementById('mode-login').classList.remove('active');
+  document.getElementById('mode-setup').classList.add('active');
+  document.getElementById('card-title').textContent = 'Create Admin Account';
+  document.getElementById('card-sub').textContent = 'Tastia Staff Directory';
+  document.getElementById('header-icon').textContent = '🔐';
+  showStep(1);
+}
+
+function showStep(n) {
+  [1,2,3].forEach(i => {
+    const stepEl = document.getElementById('setup-step-'+i);
+    const dot = document.getElementById('dot-'+i);
+    const lbl = document.getElementById('lbl-'+i);
+    if (i === n) {
+      stepEl.style.display = 'block';
+      stepEl.classList.remove('step-in'); void stepEl.offsetWidth; stepEl.classList.add('step-in');
+    } else { stepEl.style.display = 'none'; }
+    dot.classList.remove('active','done'); lbl.classList.remove('active');
+    if (i < n) { dot.classList.add('done'); dot.textContent = '✓'; }
+    else if (i === n) { dot.classList.add('active'); dot.textContent = i; lbl.classList.add('active'); }
+    else { dot.textContent = i; }
+  });
+  [1,2].forEach(i => document.getElementById('line-'+i).classList.toggle('done', i < n));
+}
+
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  const isText = el.type === 'text';
+  el.type = isText ? 'password' : 'text';
+  btn.textContent = isText ? '👁' : '🙈';
+}
+function checkStrength(pw) {
+  const fill = document.getElementById('strength-fill');
+  const label = document.getElementById('strength-label');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const pct = [0,20,45,65,85,100][score];
+  const colors = ['#e0e0e0','#ef5350','#ffa726','#ffee58','#66bb6a','#B71C1C'];
+  const labels = ['','Weak','Fair','Good','Strong','Very strong'];
+  fill.style.transform = 'scaleX('+pct/100+')'; fill.style.background = colors[score];
+  label.textContent = score > 0 ? labels[score]+' password' : 'Use 8+ characters with letters, numbers and symbols.';
+  label.style.color = score >= 3 ? '#B71C1C' : score > 0 ? '#e65100' : 'var(--ink-muted)';
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id); el.textContent = msg;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+function hideMsg(id) { document.getElementById(id).classList.remove('show'); }
+function showInfo(id, msg) {
+  const el = document.getElementById(id); el.textContent = msg;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+function setLoading(btn, on, label) {
+  btn.disabled = on; btn.classList.toggle('loading', on);
+  if (label) btn.textContent = label;
+}
+function exitCard(href, delay=300) {
+  document.querySelector('.card').classList.add('exit');
+  setTimeout(() => { window.location.href = href; }, delay + 420);
+}
+
+function initOTPBoxes() {
+  const boxes = Array.from({length:6}, (_,i) => document.getElementById('otp-'+i));
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g,'').slice(-1);
+      box.classList.toggle('filled', !!box.value);
+      hideMsg('step2-error');
+      if (box.value && i < 5) boxes[i+1].focus();
+      if (boxes.every(b => b.value.length === 1)) verifyOTP();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace') {
+        if (!box.value && i > 0) { boxes[i-1].value=''; boxes[i-1].classList.remove('filled'); boxes[i-1].focus(); }
+        else { box.value=''; box.classList.remove('filled'); }
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft' && i > 0) boxes[i-1].focus();
+      if (e.key === 'ArrowRight' && i < 5) boxes[i+1].focus();
+    });
+    box.addEventListener('paste', e => {
+      e.preventDefault();
+      const digits = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      boxes.forEach((b, idx) => { b.value = digits[idx]||''; b.classList.toggle('filled', !!b.value); });
+      boxes[Math.min(digits.length, 5)].focus();
+      if (digits.length === 6) verifyOTP();
+    });
+  });
+}
+function getOTPValue() { return Array.from({length:6}, (_,i) => document.getElementById('otp-'+i).value).join(''); }
+function clearOTPBoxes() {
+  for (let i=0; i<6; i++) {
+    const b = document.getElementById('otp-'+i);
+    b.value=''; b.classList.remove('filled','input-error','wave');
+  }
+}
+function waveOTPBoxes() {
+  return new Promise(resolve => {
+    const boxes = Array.from({length:6}, (_,i) => document.getElementById('otp-'+i));
+    boxes.forEach((box, i) => { setTimeout(() => { box.classList.remove('wave'); void box.offsetWidth; box.classList.add('wave'); }, i*55); });
+    setTimeout(resolve, 6*55+300);
+  });
+}
+function shakeOTPRow() {
+  const row = document.querySelector('.otp-row');
+  row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+  setTimeout(() => row.classList.remove('shake'), 500);
+}
+
+function startResendTimer() {
+  const btn = document.getElementById('btn-resend');
+  const timerEl = document.getElementById('resend-timer');
+  btn.disabled = true; let secs = 60; timerEl.textContent = secs;
+  clearInterval(resendInterval);
+  resendInterval = setInterval(() => {
+    secs--; timerEl.textContent = secs;
+    if (secs <= 0) { clearInterval(resendInterval); btn.disabled = false; btn.textContent = 'Resend code'; }
+  }, 1000);
+}
+
+async function sendOTP() {
+  const email = document.getElementById('setup-email').value.trim();
+  hideMsg('step1-error'); hideMsg('step1-info');
+  if (!email || !email.includes('@')) { showErr('step1-error', 'Please enter a valid email address.'); return; }
+  const btn = document.getElementById('btn-send-otp');
+  setLoading(btn, true, 'Sending code…');
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  setLoading(btn, false, 'Send Verification Code →');
+  if (error) {
+    const msg = error.message || '';
+    showErr('step1-error', msg && msg !== '{}' ? msg : 'Too many attempts — please wait a few minutes.'); return;
+  }
+  document.getElementById('otp-email-display').textContent = email;
+  showStep(2); initOTPBoxes(); startResendTimer();
+  setTimeout(() => document.getElementById('otp-0').focus(), 100);
+}
+
+async function resendOTP() {
+  const email = document.getElementById('setup-email').value.trim();
+  const btn = document.getElementById('btn-resend');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  hideMsg('step2-error'); hideMsg('step2-info');
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  if (error) {
+    const msg = error.message || '';
+    showErr('step2-error', msg && msg !== '{}' ? msg : 'Too many attempts — please wait a few minutes.');
+    btn.disabled = false; btn.textContent = 'Resend code'; return;
+  }
+  clearOTPBoxes(); showInfo('step2-info', '✓ New code sent. Check your inbox.'); startResendTimer();
+  document.getElementById('otp-0').focus();
+}
+
+async function verifyOTP() {
+  if (isVerifying) return;
+  const email = document.getElementById('setup-email').value.trim();
+  const token = getOTPValue();
+  if (token.length < 6) return;
+  isVerifying = true;
+  hideMsg('step2-error'); hideMsg('step2-info');
+  const btn = document.getElementById('btn-verify-otp');
+  setLoading(btn, true, 'Verifying…');
+  await waveOTPBoxes();
+  let { data, error } = await sb.auth.verifyOtp({ email, token, type: 'signup' });
+  if (error) ({ data, error } = await sb.auth.verifyOtp({ email, token, type: 'email' }));
+  if (error) {
+    showErr('step2-error', 'Invalid or expired code. Please try again.');
+    shakeOTPRow();
+    for (let i=0; i<6; i++) document.getElementById('otp-'+i).classList.add('input-error');
+    setTimeout(() => { clearOTPBoxes(); document.getElementById('otp-0').focus(); }, 600);
+    setLoading(btn, false, 'Verify Code →'); isVerifying = false; return;
+  }
+  clearInterval(resendInterval);
+  localStorage.setItem('tastia_admin_registered', '1');
+  showStep(3); setLoading(btn, false, 'Verify Code →'); isVerifying = false;
+  setTimeout(() => document.getElementById('setup-pw').focus(), 100);
+}
+
+async function setPassword() {
+  const pw = document.getElementById('setup-pw').value;
+  const pw2 = document.getElementById('setup-pw2').value;
+  hideMsg('step3-error');
+  if (pw.length < 6) { showErr('step3-error', 'Password must be at least 6 characters.'); return; }
+  if (pw !== pw2) { showErr('step3-error', 'Passwords do not match.'); return; }
+  const btn = document.getElementById('btn-set-pw');
+  setLoading(btn, true, 'Saving password…');
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) { showErr('step3-error', error.message); setLoading(btn, false, 'Complete Setup →'); return; }
+  btn.textContent = 'All done! Redirecting…';
+  exitCard('index.html', 200);
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-pw').value;
+  const btn = document.getElementById('btn-login');
+  hideMsg('login-error');
+  if (!email || !pw) { showErr('login-error', 'Please enter your email and password.'); return; }
+  setLoading(btn, true, 'Signing in…');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+  if (error) {
+    showErr('login-error', 'Incorrect email or password. Please try again.');
+    const pwEl = document.getElementById('login-pw');
+    pwEl.classList.add('input-error');
+    setTimeout(() => pwEl.classList.remove('input-error'), 1500);
+    setLoading(btn, false, 'Sign In →'); return;
+  }
+  btn.textContent = 'Welcome! Redirecting…';
+  exitCard('index.html', 100);
+}
+</script>
+</body>
+</html>

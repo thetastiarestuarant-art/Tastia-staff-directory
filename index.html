@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tastia Restaurant — Staff Directory</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:#FFF9F5;min-height:100vh;}
+:root{--font-heading:'Poppins',sans-serif;--font-body:'Nunito Sans',sans-serif;}
+:root{
+  --red:#B71C1C;--red-mid:#8B1010;--red-light:#FFF0F0;
+  --red-accent:#D42020;--gold-light:#FFF5E0;
+  --dark:#1A1A1A;--dark-mid:#2D2020;
+  --text-dark:#1A1A1A;--text-mid:#5A3030;--text-muted:#9A7070;
+  --border:#F0DEDE;--inactive-bg:#fde8e8;--inactive-text:#b71c1c;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.view{display:none;}.view.active{display:block;}
+
+/* ── LOADING OVERLAY ── */
+#app-loading{position:fixed;inset:0;background:#FFF9F5;display:flex;align-items:center;justify-content:center;z-index:9999;}
+.spinner{width:44px;height:44px;border:4px solid #F0DEDE;border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}
+
+/* ── NAV ── */
+.nav{background:var(--dark);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;}
+.nav-brand{display:flex;align-items:center;gap:10px;color:white;font-weight:700;font-size:17px;cursor:pointer;font-family:var(--font-heading);letter-spacing:0.5px;}
+.nav-logo-wrap{height:36px;max-width:150px;border-radius:8px;overflow:hidden;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:3px 10px;}
+.nav-logo-wrap img{height:32px;width:auto;object-fit:contain;}
+.nav-tabs{display:flex;gap:4px;}
+.nav-tab{background:transparent;border:none;color:rgba(255,255,255,0.7);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-family:var(--font-body);transition:all 0.2s;}
+.nav-tab:hover,.nav-tab.active{background:rgba(255,255,255,0.12);color:white;}
+
+/* ── DASHBOARD ── */
+.dash-wrap{max-width:960px;margin:0 auto;padding:24px 20px;}
+.dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.dash-title{font-size:20px;font-weight:600;color:var(--text-dark);font-family:var(--font-heading);letter-spacing:0.5px;}
+.btn-add{background:var(--red);color:white;border:none;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+.btn-add:hover{background:var(--red-mid);}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:white;border-radius:10px;padding:14px 18px;border:1px solid var(--border);}
+.stat-label{font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+.stat-num{font-size:28px;font-weight:600;color:var(--red);font-family:var(--font-heading);}
+.stat-num.red{color:var(--inactive-text);}
+.search-bar{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:16px;background:white;color:var(--text-dark);font-family:var(--font-body);}
+.search-bar:focus{outline:none;border-color:var(--red-accent);}
+.staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+
+/* ── STAFF CARD ── */
+.staff-card{background:white;border-radius:14px;border:1px solid var(--border);overflow:hidden;transition:all 0.2s;}
+.staff-card:hover{border-color:var(--red-accent);box-shadow:0 6px 20px rgba(183,28,28,0.12);transform:translateY(-2px);}
+.card-photo-area{height:180px;background:linear-gradient(160deg,#1A1A1A,#3A1015);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.card-photo-area img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.card-photo-initials{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;border:3px solid rgba(255,255,255,0.4);font-family:var(--font-heading);}
+.status-pip{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;border:2px solid white;}
+.status-pip.active{background:#69f0ae;}.status-pip.inactive{background:#ef5350;}
+.card-info{padding:12px 14px 8px;}
+.card-name{font-weight:600;font-size:14px;color:var(--text-dark);font-family:var(--font-heading);letter-spacing:0.3px;}
+.card-role{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.card-dept{display:inline-block;background:var(--red-light);color:var(--red);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px;}
+.card-actions{display:flex;gap:6px;padding:0 14px 14px;}
+.btn-sm{flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;text-align:center;font-family:var(--font-body);}
+.btn-view{background:var(--red-light);color:var(--red);border-color:#F0DEDE;}
+.btn-view:hover{background:#F0DEDE;}
+.btn-qr{background:var(--gold-light);color:#A06020;border-color:#FFE0A0;}
+.btn-qr:hover{background:#FFE0A0;}
+.btn-id{background:#e3f2fd;color:#0277bd;border-color:#bbdefb;}
+.btn-id:hover{background:#bbdefb;}
+.btn-edit{background:#f3e5f5;color:#6a1b9a;border-color:#e1bee7;flex:0 0 auto;padding:7px 10px;}
+.btn-edit:hover{background:#e1bee7;}
+.btn-delete{background:#fde8e8;color:#b71c1c;border-color:#ffcdd2;flex:0 0 auto;padding:7px 10px;}
+.btn-delete:hover{background:#ffcdd2;}
+
+/* ── PROFILE VIEW ── */
+.profile-wrap{max-width:680px;margin:0 auto;padding:24px 20px;}
+.profile-back{display:flex;align-items:center;gap:8px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:0;background:none;border:none;font-family:var(--font-body);}
+.profile-hero{background:var(--dark);border-radius:16px 16px 0 0;padding:28px 28px 24px;position:relative;overflow:hidden;display:flex;gap:20px;align-items:flex-end;}
+.profile-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(183,28,28,0.12);}
+.profile-logo-corner{position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:8px;}
+.profile-logo-corner img{height:28px;object-fit:contain;filter:brightness(0) invert(1);opacity:0.9;}
+.profile-logo-corner-text{color:rgba(255,255,255,0.85);font-size:13px;font-weight:600;font-family:var(--font-heading);letter-spacing:0.5px;}
+.profile-photo-wrap{width:90px;height:90px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,0.4);flex-shrink:0;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;}
+.profile-photo-wrap img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.profile-photo-initials{font-size:30px;font-weight:600;color:white;font-family:var(--font-heading);}
+.profile-meta{flex:1;}
+.profile-name{font-size:22px;font-weight:600;color:white;font-family:var(--font-heading);letter-spacing:0.5px;}
+.profile-role{font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px;}
+.profile-status{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-top:10px;}
+.profile-status.active{background:rgba(255,255,255,0.15);color:white;}
+.profile-status.inactive{background:rgba(183,28,28,0.35);color:#ffcdd2;}
+.profile-body{background:white;border-radius:0 0 16px 16px;border:1px solid var(--border);border-top:none;}
+.profile-section{padding:20px 24px;border-bottom:1px solid var(--border);}
+.profile-section:last-child{border-bottom:none;}
+.section-label{font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:14px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:13px;color:var(--text-muted);}
+.info-val{font-size:13px;font-weight:600;color:var(--text-dark);text-align:right;}
+.info-val a{color:var(--red);text-decoration:none;}
+.info-val a:hover{text-decoration:underline;}
+.bio-text{font-size:14px;color:var(--text-mid);line-height:1.7;}
+.inactive-banner{background:var(--inactive-bg);border:1px solid var(--inactive-text);padding:14px 20px;margin:16px 24px 0;border-radius:8px;font-size:13px;color:var(--inactive-text);font-weight:600;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.62);display:none;align-items:center;justify-content:center;z-index:300;padding:16px;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:white;border-radius:16px;padding:28px;max-width:340px;width:90%;text-align:center;}
+.modal-title{font-size:17px;font-weight:600;color:var(--text-dark);margin-bottom:4px;font-family:var(--font-heading);letter-spacing:0.3px;}
+.modal-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px;}
+.qr-canvas-wrap{display:flex;justify-content:center;margin-bottom:14px;}
+#styled-qr-canvas{border-radius:20px;width:260px;height:260px;box-shadow:0 4px 20px rgba(0,0,0,0.12);}
+.qr-url{font-size:11px;color:var(--text-muted);word-break:break-all;margin-bottom:16px;background:#f5f5f5;padding:8px;border-radius:6px;}
+.modal-btns{display:flex;gap:10px;}
+.btn-dl{flex:1;background:var(--red);color:white;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);}
+.btn-close-m{flex:1;background:#f5f5f5;color:var(--text-dark);border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+
+/* ── ID CARD MODAL ── */
+.id-modal-box{background:white;border-radius:16px;padding:22px;max-width:360px;width:100%;text-align:center;}
+.id-modal-name{font-size:15px;font-weight:600;color:var(--text-dark);margin-bottom:4px;font-family:var(--font-heading);letter-spacing:0.3px;}
+.id-modal-role{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
+.id-card-img-wrap{position:relative;display:inline-block;border-radius:14px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.2);line-height:0;}
+.id-card-img-wrap img{width:100%;max-width:260px;max-height:60vh;object-fit:contain;border-radius:14px;display:block;}
+.id-card-img-replace{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,0.55);color:white;border:none;border-radius:8px;font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;backdrop-filter:blur(4px);transition:background 0.2s;}
+.id-card-img-replace:hover{background:rgba(0,0,0,0.75);}
+.id-card-empty{border:2px dashed var(--border);border-radius:14px;padding:32px 20px;text-align:center;background:#fafafa;cursor:pointer;transition:all 0.2s;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+.id-card-empty:hover{border-color:var(--red-accent);background:var(--red-light);}
+.id-card-empty-icon{font-size:36px;}
+.id-card-empty-text{font-size:13px;font-weight:600;color:var(--text-dark);}
+.id-card-empty-sub{font-size:11px;color:var(--text-muted);}
+.id-card-actions{display:flex;gap:8px;margin-top:14px;}
+.btn-id-action{flex:1;padding:9px 6px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;font-family:var(--font-body);}
+.btn-upload-card{background:var(--red);color:white;border-color:var(--red);}
+.btn-upload-card:hover{background:var(--red-mid);}
+.btn-download-card{background:var(--red-light);color:var(--red);border-color:#F0DEDE;}
+.btn-download-card:hover{background:#F0DEDE;}
+.btn-print-card{background:var(--gold-light);color:#795500;border-color:#FFE0A0;}
+.btn-print-card:hover{background:#FFE0A0;}
+.btn-close-card{background:#f5f5f5;color:var(--text-dark);border-color:#e0e0e0;}
+.btn-close-card:hover{background:#e0e0e0;}
+
+/* ── ADD STAFF MODAL ── */
+.add-modal-inner{background:white;border-radius:16px;padding:24px;max-width:520px;width:95%;max-height:92vh;overflow-y:auto;text-align:left;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:12px;font-weight:600;color:var(--text-mid);}
+.form-input,.form-select,.form-textarea{padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--text-dark);background:white;font-family:var(--font-body);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--red-accent);}
+.form-input[readonly]{background:#f5f5f5;color:var(--text-muted);cursor:not-allowed;}
+.form-textarea{resize:vertical;min-height:80px;}
+.upload-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.upload-box{border:2px dashed var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafafa;}
+.upload-box:hover{border-color:var(--red-accent);background:var(--red-light);}
+.upload-box-label{font-size:11px;font-weight:700;color:var(--text-mid);margin-bottom:8px;display:block;text-transform:uppercase;letter-spacing:0.5px;}
+.upload-box-body{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.upload-icon-sm{font-size:22px;}
+.upload-hint{font-size:10px;color:var(--text-muted);}
+.btn-save{width:100%;background:var(--red);color:white;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;font-family:var(--font-body);}
+.btn-save:hover{background:var(--red-mid);}
+.btn-save:disabled{background:#E09090;cursor:not-allowed;}
+.btn-cancel{width:100%;background:#f5f5f5;color:var(--text-dark);border:none;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;font-family:var(--font-body);}
+
+/* ── CARD BACK PANEL ── */
+.card-back-panel{background:white;border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:20px;}
+.card-back-preview{flex-shrink:0;width:72px;height:110px;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;}
+.card-back-preview:hover{border-color:var(--red-accent);}
+.card-back-preview img{width:100%;height:100%;object-fit:cover;}
+.card-back-preview-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;}
+.card-back-preview-empty span{font-size:20px;}
+.card-back-preview-empty small{font-size:9px;color:var(--text-muted);text-align:center;line-height:1.3;}
+.card-back-info{flex:1;}
+.card-back-title{font-size:14px;font-weight:600;color:var(--text-dark);font-family:var(--font-heading);letter-spacing:0.3px;margin-bottom:3px;}
+.card-back-sub{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.card-back-actions{display:flex;gap:8px;flex-shrink:0;}
+.btn-back{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;white-space:nowrap;font-family:var(--font-body);}
+.btn-back-upload{background:var(--red);color:white;border-color:var(--red);}
+.btn-back-upload:hover{background:var(--red-mid);}
+.btn-back-dl{background:var(--red-light);color:var(--red);border-color:#F0DEDE;}
+.btn-back-dl:hover{background:#F0DEDE;}
+.btn-back-print{background:var(--gold-light);color:#795500;border-color:#FFE0A0;}
+.btn-back-print:hover{background:#FFE0A0;}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-chip{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:white;color:var(--text-mid);transition:all 0.15s;font-family:var(--font-body);}
+.filter-chip:hover{border-color:var(--red-accent);color:var(--red);}
+.filter-chip.active{background:var(--red);color:white;border-color:var(--red);}
+
+/* ── SCREEN READER ONLY ── */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--dark);color:white;padding:12px 22px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,0.18);opacity:0;transition:all 0.3s;pointer-events:none;z-index:9998;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#b71c1c;}
+
+/* ── MOBILE ── */
+@media(max-width:600px){
+  .nav-tabs{gap:2px;}
+  .nav-tab{padding:5px 8px;font-size:12px;}
+  .dash-wrap{padding:16px 12px;}
+  .stats-row{grid-template-columns:1fr;gap:8px;}
+  .staff-grid{grid-template-columns:1fr 1fr;gap:10px;}
+  .card-actions{flex-wrap:wrap;}
+  .modal-box{width:96%!important;max-width:100%!important;padding:20px 16px!important;max-height:92vh;overflow-y:auto;}
+  .form-grid{grid-template-columns:1fr!important;}
+  .profile-hero{flex-direction:column;align-items:center;text-align:center;padding:20px;}
+  .profile-wrap{padding:12px 12px 40px;}
+  .card-back-panel{flex-wrap:wrap;}
+  .card-back-actions{width:100%;justify-content:flex-end;}
+}
+@media(max-width:380px){
+  .staff-grid{grid-template-columns:1fr;}
+}
+
+/* ── PRINT ── */
+@media print{
+  body>nav,#view-dashboard,#view-profile,#qr-modal,#add-modal,
+  .id-modal-name,.id-modal-role,.id-card-img-replace,.id-card-actions{display:none!important;}
+  .modal-overlay{position:static!important;background:none!important;padding:0!important;display:flex!important;justify-content:center;align-items:center;min-height:100vh;}
+  .id-modal-box{box-shadow:none!important;padding:0!important;}
+  .id-card-img-wrap img{max-height:none!important;max-width:100%!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="app-loading">
+  <div style="text-align:center">
+    <div class="spinner"></div>
+    <div style="color:var(--red);font-weight:600;font-size:14px;font-family:'Poppins',sans-serif;letter-spacing:0.5px">Loading…</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand" onclick="showView('dashboard')">
+    <div class="nav-logo-wrap">
+      <img src="Tastia-Restaurant-Logo.png" alt="Tastia Restaurant" onerror="this.style.display='none'">
+    </div>
+    <span id="nav-brand-text">Tastia Restaurant</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showView('dashboard')">Staff Directory</button>
+      <button class="nav-tab" onclick="showView('profile-demo')">Profile Preview</button>
+    </div>
+    <button onclick="logout()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Nunito Sans',sans-serif;margin-left:8px;white-space:nowrap;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Sign Out</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="view-dashboard" class="view active">
+<div class="dash-wrap">
+  <div class="dash-header">
+    <div class="dash-title">Team Directory</div>
+    <button class="btn-add" onclick="openAddModal()">+ Add Staff</button>
+  </div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-label">Total Staff</div><div class="stat-num" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-num" id="stat-active">—</div></div>
+    <div class="stat-card"><div class="stat-label">Inactive</div><div class="stat-num red" id="stat-inactive">—</div></div>
+  </div>
+  <input class="search-bar" type="text" placeholder="Search by name, role or department…" id="search-input" oninput="renderCards()" aria-label="Search staff">
+  <div class="filter-row" role="group" aria-label="Filter by status">
+    <button class="filter-chip active" data-filter="all" onclick="setStatusFilter('all')">All</button>
+    <button class="filter-chip" data-filter="active" onclick="setStatusFilter('active')">Active</button>
+    <button class="filter-chip" data-filter="inactive" onclick="setStatusFilter('inactive')">Inactive</button>
+  </div>
+  <!-- CARD BACK -->
+  <div class="card-back-panel">
+    <div class="card-back-preview" onclick="document.getElementById('card-back-file-input').click()">
+      <div id="card-back-thumb"><div class="card-back-preview-empty"><span>🪪</span><small>Card Back</small></div></div>
+    </div>
+    <div class="card-back-info">
+      <div class="card-back-title">ID Card — Back Side</div>
+      <div class="card-back-sub" id="card-back-sub">One universal back for all staff ID cards.<br>Upload once, download or print anytime.</div>
+    </div>
+    <div class="card-back-actions">
+      <button class="btn-back btn-back-upload" onclick="document.getElementById('card-back-file-input').click()">⬆ Upload</button>
+      <button class="btn-back btn-back-dl" id="btn-back-dl" onclick="downloadCardBack()" style="opacity:0.45;pointer-events:none">⬇ Download</button>
+      <button class="btn-back btn-back-print" id="btn-back-print" onclick="printCardBack()" style="opacity:0.45;pointer-events:none">🖨 Print</button>
+    </div>
+    <input type="file" id="card-back-file-input" accept="image/*" style="display:none" onchange="handleCardBackUpload(event)">
+  </div>
+  <div class="staff-grid" id="staff-grid"></div>
+</div>
+</div>
+
+<!-- PROFILE VIEW -->
+<div id="view-profile" class="view">
+<div class="profile-wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <button class="profile-back" onclick="showView('dashboard')">← Back to Directory</button>
+    <div style="display:flex;gap:8px;">
+      <button id="profile-edit-btn" onclick="" style="background:#f3e5f5;color:#6a1b9a;border:1px solid #e1bee7;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Nunito Sans',sans-serif;">✎ Edit</button>
+      <button id="profile-delete-btn" onclick="" style="background:#fde8e8;color:#b71c1c;border:1px solid #ffcdd2;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Nunito Sans',sans-serif;">🗑 Delete</button>
+    </div>
+  </div>
+  <div id="profile-content"></div>
+</div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-title" id="qr-staff-name"></div>
+    <div class="modal-sub">Scan to view staff profile</div>
+    <div class="qr-canvas-wrap"><canvas id="styled-qr-canvas"></canvas></div>
+    <div class="qr-url" id="qr-url-text"></div>
+    <div class="modal-btns">
+      <button class="btn-dl" onclick="downloadQR()">⬇ Download QR</button>
+      <button class="btn-close-m" onclick="closeModal('qr-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ID CARD MODAL -->
+<div class="modal-overlay" id="id-modal">
+  <div class="id-modal-box">
+    <div class="id-modal-name" id="id-modal-name"></div>
+    <div class="id-modal-role" id="id-modal-role"></div>
+    <div id="id-card-display"></div>
+    <div class="id-card-actions">
+      <button class="btn-id-action btn-upload-card" onclick="document.getElementById('id-card-file-input').click()">⬆ Upload Card</button>
+      <button class="btn-id-action btn-download-card" id="btn-download-id" onclick="downloadIDCard()">⬇ Download</button>
+      <button class="btn-id-action btn-print-card" onclick="window.print()">🖨 Print</button>
+      <button class="btn-id-action btn-close-card" onclick="closeModal('id-modal')">✕ Close</button>
+    </div>
+    <input type="file" id="id-card-file-input" accept="image/*" style="display:none" onchange="handleIDCardUpload(event)">
+  </div>
+</div>
+
+<!-- ADD / EDIT STAFF MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="add-modal-inner">
+    <div id="add-modal-title" style="font-size:18px;font-weight:600;color:var(--text-dark);margin-bottom:16px;font-family:'Poppins',sans-serif;letter-spacing:0.5px">Add New Staff</div>
+    <div class="upload-pair">
+      <div>
+        <span class="upload-box-label">Profile Photo</span>
+        <div class="upload-box" onclick="document.getElementById('photo-file-input').click()">
+          <div class="upload-box-body" id="photo-placeholder">
+            <div class="upload-icon-sm">📷</div>
+            <div class="upload-hint">JPG or PNG</div>
+          </div>
+        </div>
+        <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+      </div>
+      <div>
+        <span class="upload-box-label">ID Card Image</span>
+        <div class="upload-box" onclick="document.getElementById('id-card-add-input').click()">
+          <div class="upload-box-body" id="id-card-add-placeholder">
+            <div class="upload-icon-sm">🪪</div>
+            <div class="upload-hint">Upload designed card</div>
+          </div>
+        </div>
+        <input type="file" id="id-card-add-input" accept="image/*" style="display:none" onchange="handleIDCardAddUpload(event)">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="f-fn" placeholder="Amaka"></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="f-ln" placeholder="Osei"></div>
+      <div class="form-group"><label class="form-label">Role / Title</label><input class="form-input" id="f-role" placeholder="Head Chef"></div>
+      <div class="form-group"><label class="form-label">Department</label><input class="form-input" id="f-dept" placeholder="Kitchen"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-email" type="email" placeholder="amaka@tastiarestaurantng.com"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="f-phone" placeholder="+234 801 000 0000"></div>
+      <div class="form-group"><label class="form-label">Employee ID</label><input class="form-input" id="f-empid" placeholder="TR-001"></div>
+      <div class="form-group"><label class="form-label">Join Date</label><input class="form-input" id="f-join" type="date"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="f-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+      </div>
+      <div class="form-group full"><label class="form-label">Bio</label><textarea class="form-textarea" id="f-bio" placeholder="Brief bio…"></textarea></div>
+    </div>
+    <button class="btn-save" id="btn-save-staff" onclick="saveStaff()">Save Staff Member</button>
+    <button class="btn-cancel" onclick="closeModal('add-modal')">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+/* ── SUPABASE ── */
+const { createClient } = supabase;
+const sb = createClient(
+  'YOUR_SUPABASE_URL',
+  'YOUR_SUPABASE_ANON_KEY'
+);
+
+const BASE_URL = window.location.origin + '/';
+const COLORS = ['#B71C1C','#0277bd','#6a1b9a','#ad1457','#e65100','#00695c','#283593','#4e342e'];
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let staff = [];
+let currentQRStaff = null, currentIDStaff = null;
+let pendingPhotoFile = null, pendingIDCardFile = null;
+let editingStaffId = null;
+let cardBack = 'id-cards/card-back.png';
+let statusFilter = 'all';
+
+function setStatusFilter(val) {
+  statusFilter = val;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === val));
+  renderCards();
+}
+
+/* ── INIT ── */
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.replace('login.html'); return; }
+  document.getElementById('app-loading').style.display = 'none';
+  await loadStaff();
+  initCardBack();
+  const p = new URLSearchParams(window.location.search).get('staff');
+  if (p) window.location.replace('profile.html?staff=' + p);
+}
+
+/* ── LOAD STAFF ── */
+async function loadStaff() {
+  const { data, error } = await sb.from('staff').select('*').order('id');
+  if (error) { showToast('Could not load staff: ' + error.message, 5000, true); return; }
+  staff = data || [];
+  updateStats();
+  renderCards();
+}
+
+/* ── STORAGE UPLOAD ── */
+async function uploadToStorage(bucket, path, file) {
+  const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'png';
+  const fullPath = path + '.' + ext;
+  const { error } = await sb.storage.from(bucket).upload(fullPath, file, {
+    upsert: true, contentType: file.type
+  });
+  if (error) throw error;
+  const { data } = sb.storage.from(bucket).getPublicUrl(fullPath);
+  return data.publicUrl;
+}
+
+/* ── CARD BACK ── */
+function initCardBack() {
+  const img = new Image();
+  img.onload = () => applyCardBack('id-cards/card-back.png');
+  img.onerror = () => {};
+  img.src = 'id-cards/card-back.png';
+}
+function handleCardBackUpload(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => applyCardBack(ev.target.result);
+  r.readAsDataURL(f);
+  e.target.value = '';
+}
+function applyCardBack(src) {
+  cardBack = src;
+  document.getElementById('card-back-thumb').innerHTML = `<img src="${src}" alt="Card Back">`;
+  document.getElementById('card-back-sub').textContent = 'Back uploaded. Ready to download or print.';
+  const dl = document.getElementById('btn-back-dl'), pr = document.getElementById('btn-back-print');
+  dl.style.opacity = '1'; dl.style.pointerEvents = 'auto';
+  pr.style.opacity = '1'; pr.style.pointerEvents = 'auto';
+}
+function downloadCardBack() {
+  if (!cardBack) return;
+  const a = document.createElement('a');
+  a.href = cardBack; a.download = 'tastia-id-card-back.png'; a.target = '_blank'; a.click();
+}
+function printCardBack() {
+  if (!cardBack) return;
+  const w = window.open('', '_blank', 'width=500,height=750');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>*{margin:0;padding:0;}body{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#eee;}
+    img{max-width:340px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);}
+    @media print{body{background:white;}}</style></head>
+    <body><img src="${cardBack}"><script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ── HELPERS ── */
+function initials(s) { return ((s.firstname||'?')[0] + (s.lastname||'?')[0]).toUpperCase(); }
+function avatarColor(id) { const n = (id||'').split('').reduce((a,c) => a + c.charCodeAt(0), 0); return COLORS[n % COLORS.length]; }
+function staffURL(s) { return BASE_URL + 'profile.html?staff=' + s.id; }
+function fmtDate(d) { if (!d) return 'N/A'; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; }
+
+/* ── STATS ── */
+function updateStats() {
+  const a = staff.filter(s => s.status === 'active').length;
+  document.getElementById('stat-total').textContent = staff.length;
+  document.getElementById('stat-active').textContent = a;
+  document.getElementById('stat-inactive').textContent = staff.length - a;
+}
+
+/* ── CARDS ── */
+function renderCards() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const list = staff.filter(s => {
+    const matchesSearch = (s.firstname+' '+s.lastname+' '+s.role+' '+s.dept).toLowerCase().includes(q);
+    const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+  const grid = document.getElementById('staff-grid');
+  if (!list.length) { grid.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:40px">No staff found.</p>'; return; }
+  grid.innerHTML = list.map(s => {
+    const ini = initials(s), col = avatarColor(s.id);
+    const photoHTML = s.photo_url
+      ? `<img src="${s.photo_url}" alt="${esc(s.firstname)}" onerror="this.outerHTML='<div class=card-photo-initials style=background:${col}>${ini}</div>'">`
+      : `<div class="card-photo-initials" style="background:${col}">${ini}</div>`;
+    return `<div class="staff-card">
+      <div class="card-photo-area">
+        ${photoHTML}
+        <div class="status-pip ${s.status}" title="${s.status === 'active' ? 'Active' : 'Inactive'}"><span class="sr-only">${s.status === 'active' ? 'Active' : 'Inactive'}</span></div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${esc(s.firstname)} ${esc(s.lastname)}</div>
+        <div class="card-role">${esc(s.role)}</div>
+        <div class="card-dept">${esc(s.dept)}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm btn-view" onclick="viewProfile('${esc(s.id)}')">Profile</button>
+        <button class="btn-sm btn-qr" onclick="openQR('${esc(s.id)}')">QR</button>
+        <button class="btn-sm btn-id" onclick="openIDCard('${esc(s.id)}')">${s.id_card_url ? 'ID Card' : '+ ID'}</button>
+        <button class="btn-sm btn-edit" onclick="editStaff('${esc(s.id)}')" aria-label="Edit ${esc(s.firstname)} ${esc(s.lastname)}">✎</button>
+        <button class="btn-sm btn-delete" onclick="deleteStaff('${esc(s.id)}')" aria-label="Delete ${esc(s.firstname)} ${esc(s.lastname)}">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── PROFILE ── */
+function viewProfile(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  const active = s.status === 'active';
+  const ini = initials(s);
+  const photoHTML = s.photo_url
+    ? `<img src="${s.photo_url}" onerror="this.outerHTML='<div class=profile-photo-initials>${ini}</div>'">`
+    : `<div class="profile-photo-initials">${ini}</div>`;
+
+  document.getElementById('profile-edit-btn').onclick = () => editStaff(s.id);
+  document.getElementById('profile-delete-btn').onclick = () => deleteStaff(s.id);
+  document.getElementById('profile-content').innerHTML = `
+    <div>
+      <div class="profile-hero">
+        <div class="profile-logo-corner">
+          <img src="Tastia-Restaurant-Logo.png" alt="Tastia Restaurant" onerror="this.parentElement.innerHTML='<span class=profile-logo-corner-text>Tastia Restaurant</span>'">
+        </div>
+        <div class="profile-photo-wrap">${photoHTML}</div>
+        <div class="profile-meta">
+          <div class="profile-name">${esc(s.firstname)} ${esc(s.lastname)}</div>
+          <div class="profile-role">${esc(s.role)} · ${esc(s.dept)}</div>
+          <span class="profile-status ${s.status}">
+            <span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block"></span>
+            ${active ? 'Active Employee' : 'No Longer Active'}
+          </span>
+        </div>
+      </div>
+      <div class="profile-body">
+        ${!active ? `<div class="inactive-banner">⚠ This person is no longer an active employee of Tastia Restaurant.</div>` : ''}
+        <div class="profile-section">
+          <div class="section-label">About</div>
+          <p class="bio-text">${esc(s.bio) || 'No bio available.'}</p>
+        </div>
+        <div class="profile-section">
+          <div class="section-label">Details</div>
+          <div class="info-row"><span class="info-key">Employee ID</span><span class="info-val">${esc(s.id)}</span></div>
+          <div class="info-row"><span class="info-key">Department</span><span class="info-val">${esc(s.dept)}</span></div>
+          <div class="info-row"><span class="info-key">Joined</span><span class="info-val">${fmtDate(s.join_date)}</span></div>
+          <div class="info-row"><span class="info-key">Status</span><span class="info-val">${active ? '✅ Active' : '❌ Inactive'}</span></div>
+        </div>
+        <div class="profile-section">
+          <div class="section-label">Contact</div>
+          <div class="info-row"><span class="info-key">Email</span><span class="info-val"><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></span></div>
+          <div class="info-row"><span class="info-key">Phone</span><span class="info-val"><a href="tel:${s.phone.replace(/\s/g,'')}">${esc(s.phone)}</a></span></div>
+        </div>
+        <div class="profile-section" style="background:#FFF9F5;border-radius:0 0 16px 16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <img src="Tastia-Restaurant-Logo.png" style="height:32px;width:auto;max-width:110px;object-fit:contain;background:white;border-radius:6px;padding:2px 8px;" onerror="this.outerHTML='<div style=background:white;color:var(--red);padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700;font-family:Poppins,sans-serif>TASTIA</div>'">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--red);font-family:'Poppins',sans-serif;letter-spacing:0.5px">Tastia Restaurant</div>
+              <div style="font-size:11px;color:var(--text-muted)">www.tastiarestaurantng.com · info@tastiarestaurantng.com</div>
+              <div style="font-size:10px;color:var(--text-muted);margin-top:2px">Tastia Restaurant, Nigeria</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  showView('profile');
+}
+
+/* ── ID CARD ── */
+function openIDCard(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  currentIDStaff = s;
+  document.getElementById('id-modal-name').textContent = s.firstname + ' ' + s.lastname;
+  document.getElementById('id-modal-role').textContent = s.role + ' · ' + s.dept;
+  refreshIDCardDisplay();
+  document.getElementById('id-modal').classList.add('open');
+}
+function refreshIDCardDisplay() {
+  const s = currentIDStaff; if (!s) return;
+  const display = document.getElementById('id-card-display');
+  const dlBtn = document.getElementById('btn-download-id');
+  if (s.id_card_url) {
+    const src = s.id_card_url + '?t=' + (s._cacheBust || '');
+    display.innerHTML = `
+      <div class="id-card-img-wrap">
+        <img src="${src}" alt="ID Card — ${s.firstname} ${s.lastname}"
+             onerror="this.parentElement.innerHTML='<div style=padding:20px;color:#b71c1c;font-size:13px>Image not found. Please re-upload.</div>'">
+        <button class="id-card-img-replace" onclick="document.getElementById('id-card-file-input').click()">✎ Replace</button>
+      </div>`;
+    dlBtn.style.opacity = '1'; dlBtn.style.pointerEvents = 'auto';
+  } else {
+    display.innerHTML = `
+      <div class="id-card-empty" onclick="document.getElementById('id-card-file-input').click()">
+        <div class="id-card-empty-icon">🪪</div>
+        <div class="id-card-empty-text">No ID card uploaded yet</div>
+        <div class="id-card-empty-sub">Click to upload the designed ID card image</div>
+      </div>`;
+    dlBtn.style.opacity = '0.4'; dlBtn.style.pointerEvents = 'none';
+  }
+}
+async function handleIDCardUpload(e) {
+  const f = e.target.files[0]; if (!f || !currentIDStaff) return;
+  if (f.size > 5 * 1024 * 1024) { showToast('ID card too large. Max 5MB.', 3000, true); e.target.value=''; return; }
+  e.target.value = '';
+  const dlBtn = document.getElementById('btn-download-id');
+  dlBtn.disabled = true; dlBtn.textContent = 'Uploading…';
+  try {
+    const oldUrl = currentIDStaff.id_card_url;
+    const url = await uploadToStorage('staff-id-cards', currentIDStaff.id + '-card', f);
+    if (oldUrl && oldUrl !== url) {
+      const oldPath = oldUrl.split('/staff-id-cards/')[1]?.split('?')[0];
+      if (oldPath) await sb.storage.from('staff-id-cards').remove([oldPath]);
+    }
+    const { error } = await sb.from('staff').update({ id_card_url: url }).eq('id', currentIDStaff.id);
+    if (error) throw error;
+    currentIDStaff.id_card_url = url;
+    currentIDStaff._cacheBust = Date.now();
+    const s = staff.find(x => x.id === currentIDStaff.id);
+    if (s) { s.id_card_url = url; s._cacheBust = currentIDStaff._cacheBust; }
+    refreshIDCardDisplay();
+    renderCards();
+    showToast('ID card replaced ✓');
+  } catch(err) {
+    showToast('Upload failed: ' + err.message, 5000, true);
+  } finally {
+    dlBtn.disabled = false; dlBtn.textContent = '⬇ Download';
+  }
+}
+function downloadIDCard() {
+  const s = currentIDStaff; if (!s || !s.id_card_url) return;
+  const a = document.createElement('a');
+  a.href = s.id_card_url; a.download = s.id + '-id-card.png'; a.target = '_blank'; a.click();
+}
+
+/* ── STYLED QR ── */
+const TASTIA_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="20" fill="#B71C1C"/>
+  <text x="50" y="68" font-family="Poppins,Arial" font-size="52" font-weight="700" fill="white" text-anchor="middle">T</text>
+</svg>`;
+function fillRR(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();ctx.fill();
+}
+function drawStyledQR(canvas, url) {
+  const qr = qrcode(0,'H'); qr.addData(url); qr.make();
+  const mc = qr.getModuleCount(), pad = 2, S = 520;
+  canvas.width = S; canvas.height = S;
+  const cell = S / (mc + pad * 2);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,S,S);
+  function isFinder(r,c){return(r<7&&c<7)||(r<7&&c>=mc-7)||(r>=mc-7&&c<7);}
+  ctx.fillStyle = '#1A1A1A';
+  const dr = cell * 0.42;
+  for (let r=0; r<mc; r++) for (let c=0; c<mc; c++) {
+    if (isFinder(r,c)) continue;
+    if (qr.isDark(r,c)) {
+      const cx=(c+pad+0.5)*cell, cy=(r+pad+0.5)*cell;
+      ctx.beginPath(); ctx.arc(cx,cy,dr,0,Math.PI*2); ctx.fill();
+    }
+  }
+  [{r:0,c:0},{r:0,c:mc-7},{r:mc-7,c:0}].forEach(({r,c})=>{
+    const x=(c+pad)*cell,y=(r+pad)*cell,sz=7*cell,cr=cell*1.1;
+    ctx.fillStyle='#B71C1C';fillRR(ctx,x,y,sz,sz,cr);
+    ctx.fillStyle='#fff';fillRR(ctx,x+cell,y+cell,sz-cell*2,sz-cell*2,cr*0.55);
+    ctx.fillStyle='#B71C1C';fillRR(ctx,x+cell*2,y+cell*2,sz-cell*4,sz-cell*4,cr*0.35);
+  });
+  const ls=S*0.19, lx=(S-ls)/2, ly=(S-ls)/2;
+  ctx.fillStyle='#fff'; fillRR(ctx,lx-10,ly-10,ls+20,ls+20,14);
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img,lx,ly,ls,ls);
+  img.onerror = () => { const fb=new Image(); fb.onload=()=>ctx.drawImage(fb,lx,ly,ls,ls); fb.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(TASTIA_LOGO_SVG); };
+  img.src = 'logo.png';
+}
+function openQR(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  currentQRStaff = s;
+  document.getElementById('qr-staff-name').textContent = s.firstname + ' ' + s.lastname;
+  const url = staffURL(s);
+  document.getElementById('qr-url-text').textContent = url;
+  drawStyledQR(document.getElementById('styled-qr-canvas'), url);
+  document.getElementById('qr-modal').classList.add('open');
+}
+function downloadQR() {
+  const canvas = document.getElementById('styled-qr-canvas'); if (!canvas) return;
+  const a = document.createElement('a');
+  a.download = (currentQRStaff ? currentQRStaff.id : 'staff') + '-qr.png';
+  a.href = canvas.toDataURL('image/png'); a.click();
+}
+
+/* ── PHOTO/ID CARD FILE SELECTION ── */
+function handlePhotoUpload(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 5 * 1024 * 1024) { showToast('Photo too large. Max 5MB.', 3000, true); e.target.value=''; return; }
+  pendingPhotoFile = f;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('photo-placeholder').innerHTML =
+    `<img src="${ev.target.result}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;border:2px solid var(--border)">
+     <div class="upload-hint" style="color:var(--red);font-weight:600">Ready ✓</div>`; };
+  r.readAsDataURL(f);
+}
+function handleIDCardAddUpload(e) {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 5 * 1024 * 1024) { showToast('ID card too large. Max 5MB.', 3000, true); e.target.value=''; return; }
+  pendingIDCardFile = f;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('id-card-add-placeholder').innerHTML =
+    `<img src="${ev.target.result}" style="width:44px;height:66px;border-radius:6px;object-fit:cover;border:2px solid var(--border)">
+     <div class="upload-hint" style="color:var(--red-mid);font-weight:600">Ready ✓</div>`; };
+  r.readAsDataURL(f);
+}
+
+/* ── ADD / EDIT MODAL ── */
+function openAddModal() {
+  editingStaffId = null; pendingPhotoFile = null; pendingIDCardFile = null;
+  document.getElementById('add-modal-title').textContent = 'Add New Staff';
+  document.getElementById('btn-save-staff').textContent = 'Save Staff Member';
+  document.getElementById('photo-placeholder').innerHTML = `<div class="upload-icon-sm">📷</div><div class="upload-hint">JPG or PNG</div>`;
+  document.getElementById('id-card-add-placeholder').innerHTML = `<div class="upload-icon-sm">🪪</div><div class="upload-hint">Upload designed card</div>`;
+  ['f-fn','f-ln','f-role','f-dept','f-email','f-phone','f-empid','f-join','f-bio'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-status').value = 'active';
+  document.getElementById('f-empid').removeAttribute('readonly');
+  document.getElementById('add-modal').classList.add('open');
+}
+function editStaff(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  editingStaffId = id; pendingPhotoFile = null; pendingIDCardFile = null;
+  document.getElementById('add-modal-title').textContent = 'Edit Staff — ' + s.firstname + ' ' + s.lastname;
+  document.getElementById('btn-save-staff').textContent = 'Save Changes';
+  document.getElementById('f-fn').value = s.firstname || '';
+  document.getElementById('f-ln').value = s.lastname || '';
+  document.getElementById('f-role').value = s.role || '';
+  document.getElementById('f-dept').value = s.dept || '';
+  document.getElementById('f-email').value = s.email || '';
+  document.getElementById('f-phone').value = s.phone || '';
+  document.getElementById('f-empid').value = s.id || '';
+  document.getElementById('f-empid').setAttribute('readonly','readonly');
+  document.getElementById('f-join').value = s.join_date || '';
+  document.getElementById('f-status').value = s.status || 'active';
+  document.getElementById('f-bio').value = s.bio || '';
+  document.getElementById('photo-placeholder').innerHTML = s.photo_url
+    ? `<img src="${s.photo_url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;border:2px solid var(--border)" onerror="this.outerHTML='<div class=upload-icon-sm>📷</div>'"><div class="upload-hint" style="color:var(--red-mid);font-weight:600">Current photo</div>`
+    : `<div class="upload-icon-sm">📷</div><div class="upload-hint">JPG or PNG</div>`;
+  document.getElementById('id-card-add-placeholder').innerHTML = s.id_card_url
+    ? `<img src="${s.id_card_url}" style="width:44px;height:66px;border-radius:6px;object-fit:cover;border:2px solid var(--border)" onerror="this.outerHTML='<div class=upload-icon-sm>🪪</div>'"><div class="upload-hint" style="color:var(--red-mid);font-weight:600">Current card</div>`
+    : `<div class="upload-icon-sm">🪪</div><div class="upload-hint">Upload designed card</div>`;
+  document.getElementById('add-modal').classList.add('open');
+}
+
+async function saveStaff() {
+  const fn = document.getElementById('f-fn').value.trim();
+  const ln = document.getElementById('f-ln').value.trim();
+  if (!fn || !ln) { alert('Please enter first and last name.'); return; }
+
+  const btn = document.getElementById('btn-save-staff');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    const isEdit = !!editingStaffId;
+    const existing = isEdit ? staff.find(x => x.id === editingStaffId) : null;
+    const empid = isEdit ? editingStaffId : (document.getElementById('f-empid').value.trim() || 'TR-' + String(staff.length + 1).padStart(3,'0'));
+
+    let photo_url = existing?.photo_url || null;
+    let id_card_url = existing?.id_card_url || null;
+
+    if (pendingPhotoFile) photo_url = await uploadToStorage('staff-photos', empid, pendingPhotoFile);
+    if (pendingIDCardFile) id_card_url = await uploadToStorage('staff-id-cards', empid + '-card', pendingIDCardFile);
+
+    const record = {
+      firstname: fn, lastname: ln,
+      role: document.getElementById('f-role').value.trim() || 'Staff',
+      dept: document.getElementById('f-dept').value.trim() || 'General',
+      email: document.getElementById('f-email').value.trim(),
+      phone: document.getElementById('f-phone').value.trim(),
+      join_date: document.getElementById('f-join').value || null,
+      status: document.getElementById('f-status').value,
+      bio: document.getElementById('f-bio').value.trim(),
+      photo_url, id_card_url
+    };
+
+    if (isEdit) {
+      const { error } = await sb.from('staff').update(record).eq('id', empid);
+      if (error) throw error;
+      const idx = staff.findIndex(x => x.id === empid);
+      if (idx >= 0) staff[idx] = { ...staff[idx], ...record };
+    } else {
+      const { error } = await sb.from('staff').insert({ id: empid, ...record });
+      if (error) throw error;
+      staff.push({ id: empid, ...record });
+    }
+
+    closeModal('add-modal');
+    editingStaffId = null; pendingPhotoFile = null; pendingIDCardFile = null;
+    updateStats(); renderCards();
+    showToast(isEdit ? '✓ Staff updated' : '✓ Staff added');
+    if (isEdit && document.getElementById('view-profile').classList.contains('active')) viewProfile(empid);
+
+  } catch(err) {
+    showToast('Error: ' + err.message, 5000, true);
+  } finally {
+    btn.disabled = false; btn.textContent = editingStaffId ? 'Save Changes' : 'Save Staff Member';
+  }
+}
+
+async function deleteStaff(id) {
+  const s = staff.find(x => x.id === id); if (!s) return;
+  if (!confirm(`Delete ${esc(s.firstname)} ${esc(s.lastname)}?\n\nThis cannot be undone.`)) return;
+  const { error } = await sb.from('staff').delete().eq('id', id);
+  if (error) { showToast('Delete failed: ' + error.message, 5000, true); return; }
+  staff = staff.filter(x => x.id !== id);
+  updateStats(); renderCards();
+  showToast('Staff member deleted');
+  if (document.getElementById('view-profile').classList.contains('active')) showView('dashboard');
+}
+
+/* ── TOAST ── */
+function showToast(msg, duration=3000, isError=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', isError);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+/* ── NAV / MODAL / VIEW ── */
+async function logout() {
+  await sb.auth.signOut();
+  window.location.href = 'login.html';
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (name === 'dashboard') {
+    document.getElementById('view-dashboard').classList.add('active');
+    document.querySelectorAll('.nav-tab')[0].classList.add('active');
+  } else {
+    document.getElementById('view-profile').classList.add('active');
+    document.querySelectorAll('.nav-tab')[1].classList.add('active');
+    if (name === 'profile-demo' && staff.length) viewProfile(staff[0].id);
+  }
+}
+['qr-modal','id-modal','add-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) closeModal(id); });
+});
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
