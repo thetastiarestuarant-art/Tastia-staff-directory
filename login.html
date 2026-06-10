@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nunito Sans',sans-serif;background:var(--red);min-height:100vh;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--bg);min-height:100vh;}
 
 :root{
   --red:#B71C1C;--red-mid:#8B1010;--red-light:#FFF0F0;
@@ -23,34 +23,54 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--red);min-height:100vh
   --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
 }
 
-/* ══ LAYOUT ══ */
-.layout{display:flex;flex-direction:column;min-height:100vh;}
+/* ══ SPLIT LAYOUT ══ */
+.layout{display:grid;grid-template-columns:420px 1fr;min-height:100vh;}
 
-/* ── TOP NAV ── */
-.top-nav{
-  background:white;
-  height:72px;flex-shrink:0;
+/* ── BRAND PANEL ── */
+.brand-panel{
+  background:var(--dark);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:56px 48px;
+  animation:panel-in 0.7s var(--ease-out-expo) both;
+}
+@keyframes panel-in{from{opacity:0;}to{opacity:1;}}
+.brand-panel::before{
+  content:'';position:absolute;border-radius:50%;pointer-events:none;
+  width:520px;height:520px;
+  background:radial-gradient(circle,rgba(183,28,28,0.35) 0%,transparent 65%);
+  top:-180px;left:-140px;filter:blur(48px);
+  animation:orb-a 22s ease-in-out infinite alternate;
+}
+.brand-panel::after{
+  content:'';position:absolute;border-radius:50%;pointer-events:none;
+  width:380px;height:380px;
+  background:radial-gradient(circle,rgba(183,28,28,0.18) 0%,transparent 65%);
+  bottom:-100px;right:-80px;filter:blur(44px);
+  animation:orb-b 28s ease-in-out infinite alternate;
+}
+@keyframes orb-a{from{transform:translate(0,0) scale(1);}to{transform:translate(50px,35px) scale(1.12);}}
+@keyframes orb-b{from{transform:translate(0,0) scale(1);}to{transform:translate(-40px,-30px) scale(1.08);}}
+.brand-inner{position:relative;z-index:1;text-align:center;animation:brand-rise 0.65s var(--ease-out-expo) 0.1s both;}
+@keyframes brand-rise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.brand-logo{
+  width:96px;height:96px;background:white;border-radius:20px;
   display:flex;align-items:center;justify-content:center;
-  padding:0 24px;
-  box-shadow:0 1px 0 rgba(0,0,0,0.06);
-  animation:nav-in 0.5s var(--ease-out-expo) both;
+  margin:0 auto 28px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.28);
+  overflow:hidden;padding:10px;
 }
-@keyframes nav-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.top-nav-logo{
-  height:52px;width:auto;max-width:200px;
-  object-fit:contain;display:block;
-}
-.top-nav-fallback{
-  font-family:var(--font-heading);font-size:20px;font-weight:700;
-  color:var(--red);letter-spacing:1.5px;
-}
+.brand-logo img{width:100%;height:100%;object-fit:contain;}
+.brand-logo-fallback{font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--red);}
+.brand-name{font-family:var(--font-heading);font-size:28px;font-weight:700;color:white;margin-bottom:4px;letter-spacing:0.3px;}
+.brand-product{font-size:11px;font-weight:600;color:rgba(255,255,255,0.42);text-transform:uppercase;letter-spacing:2px;margin-bottom:36px;}
+.brand-rule{width:36px;height:2px;background:var(--red);border-radius:2px;margin:0 auto 28px;}
+.brand-tagline{font-size:14px;line-height:1.8;color:rgba(255,255,255,0.62);max-width:250px;margin:0 auto;}
+.brand-footer{position:absolute;bottom:28px;z-index:1;font-size:11px;font-weight:600;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;}
 
 /* ── FORM PANEL ── */
-.form-panel{
-  flex:1;background:transparent;
-  display:flex;align-items:center;justify-content:center;
-  padding:40px 24px 56px;
-}
+.form-panel{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px 24px;min-height:100vh;}
 
 /* ── CARD ── */
 .card{
@@ -189,11 +209,17 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--red);min-height:100vh
 .email-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red-light);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--ink-mid);font-weight:600;margin-bottom:4px;}
 
 /* ── RESPONSIVE ── */
-@media(max-width:600px){
-  .top-nav{height:60px;}
-  .top-nav-logo{height:42px;}
-  .form-panel{padding:24px 16px 48px;align-items:flex-start;padding-top:28px;}
-  .form-header{padding:28px 24px 20px;}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
+  .brand-panel{flex-direction:row;padding:0 20px;height:64px;justify-content:flex-start;gap:12px;animation:none;}
+  .brand-panel::before,.brand-panel::after{display:none;}
+  .brand-inner{display:flex;align-items:center;gap:10px;animation:none;}
+  .brand-logo{width:38px;height:38px;border-radius:10px;margin:0;box-shadow:none;padding:4px;}
+  .brand-logo-fallback{font-size:12px;}
+  .brand-name{font-size:16px;margin-bottom:0;}
+  .brand-product,.brand-rule,.brand-tagline,.brand-footer{display:none;}
+  .form-panel{padding:24px 16px 40px;min-height:calc(100vh - 64px);align-items:flex-start;padding-top:32px;}
+  .form-header{padding:32px 24px 24px;}
   .card-body{padding:20px 24px 28px;}
 }
 @media(prefers-reduced-motion:reduce){
@@ -205,11 +231,20 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--red);min-height:100vh
 
 <div class="layout">
 
-  <!-- TOP NAV -->
-  <header class="top-nav">
-    <img src="Tastia-Restaurant-Logo.png" class="top-nav-logo" alt="Tastia Restaurant"
-         onerror="this.outerHTML='<span class=top-nav-fallback>TASTIA</span>'">
-  </header>
+  <!-- BRAND PANEL -->
+  <aside class="brand-panel">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <img src="Tastia-Restaurant-Logo.png" alt="Tastia Restaurant"
+             onerror="this.outerHTML='<div class=brand-logo-fallback>TASTIA</div>'">
+      </div>
+      <div class="brand-name">Tastia Restaurant</div>
+      <div class="brand-product">Staff Directory</div>
+      <div class="brand-rule"></div>
+      <p class="brand-tagline">Every team member, verified and on record.</p>
+    </div>
+    <div class="brand-footer">Admin access only</div>
+  </aside>
 
   <!-- FORM PANEL -->
   <main class="form-panel">
