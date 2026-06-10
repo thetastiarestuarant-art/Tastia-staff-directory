@@ -7,10 +7,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,600;0,6..96,700;1,6..96,400&family=Jost:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);min-height:100vh;}
 
 :root{
   --red:#B71C1C;--red-mid:#8B1010;--red-light:#FFF0F0;
@@ -18,8 +18,8 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
   --ink:#1A1A1A;--ink-mid:#5A3030;--ink-muted:#9A7070;
   --border:#F0DEDE;--bg:#FFF9F5;
   --inactive-bg:#FDE8E8;--inactive-text:#B71C1C;
-  --font-heading:'Bodoni Moda',Georgia,serif;
-  --font-sans:'Jost',sans-serif;
+  --font-heading:'Cormorant Garamond',Georgia,serif;
+  --font-sans:'DM Sans',sans-serif;
   --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
   --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
 }
@@ -72,14 +72,25 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 .brand-tagline{font-size:14px;line-height:1.85;color:rgba(255,255,255,0.72);max-width:240px;margin:0 auto;font-family:var(--font-sans);}
 .brand-footer{position:absolute;bottom:28px;z-index:1;font-size:10.5px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,0.38);text-transform:uppercase;font-family:var(--font-sans);}
 
+/* ── FLOATING AVATAR LAYER ── */
+.float-layer{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.float-av{position:absolute;border-radius:50%;object-fit:cover;object-position:center top;will-change:transform;}
+@keyframes fd-a{0%,100%{transform:translate(0,0);}50%{transform:translate(26px,-70px);}}
+@keyframes fd-b{0%,100%{transform:translate(0,0);}50%{transform:translate(-36px,62px);}}
+@keyframes fd-c{0%,100%{transform:translate(0,0);}33%{transform:translate(46px,26px);}66%{transform:translate(-18px,54px);}}
+@keyframes fd-d{0%,100%{transform:translate(0,0);}25%{transform:translate(-30px,-50px);}75%{transform:translate(40px,-24px);}}
+@keyframes fd-e{0%,100%{transform:translate(0,0);}40%{transform:translate(18px,80px);}80%{transform:translate(-30px,42px);}}
+@keyframes fd-f{0%,100%{transform:translate(0,0);}60%{transform:translate(52px,-32px);}}
+@media(prefers-reduced-motion:reduce){.float-av{animation:none!important;}}
+
 /* ── FORM PANEL ── */
-.form-panel{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px 24px;min-height:100vh;}
+.form-panel{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px 24px;min-height:100vh;position:relative;}
 
 /* ── CARD ── */
 .card{
   background:white;border-radius:20px;
   box-shadow:0 8px 48px rgba(0,0,0,0.22),0 2px 8px rgba(0,0,0,0.12);
-  width:100%;max-width:420px;overflow:hidden;position:relative;
+  width:100%;max-width:420px;overflow:hidden;position:relative;z-index:1;
   animation:card-rise 0.55s var(--ease-out-expo) 0.15s both;
 }
 @keyframes card-rise{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
@@ -135,7 +146,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 .field-input{
   width:100%;padding:13px 44px 13px 16px;
   border:1.5px solid var(--border);border-radius:10px;
-  font-size:14px;font-family:'Jost',sans-serif;color:var(--ink);
+  font-size:14px;font-family:'DM Sans',sans-serif;color:var(--ink);
   background:white;outline:none;
   transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
 }
@@ -151,7 +162,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 .otp-box{
   width:46px;height:56px;border:1.5px solid var(--border);border-radius:10px;
   font-size:22px;font-weight:700;text-align:center;color:var(--ink);
-  background:white;outline:none;font-family:'Jost',sans-serif;
+  background:white;outline:none;font-family:'DM Sans',sans-serif;
   transition:border-color 0.2s,background 0.2s,box-shadow 0.2s;
 }
 .otp-box:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(183,28,28,0.10);}
@@ -178,7 +189,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 .btn-submit{
   width:100%;background:var(--red);color:white;border:none;
   padding:15px;border-radius:10px;font-size:15px;font-weight:700;
-  font-family:'Jost',sans-serif;cursor:pointer;margin-top:8px;
+  font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:8px;
   transition:background 0.15s,transform 0.1s,box-shadow 0.15s;
   letter-spacing:0.5px;position:relative;overflow:hidden;
   text-transform:uppercase;
@@ -197,7 +208,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 .btn-ghost{
   width:100%;background:transparent;color:var(--red);
   border:1.5px solid var(--border);padding:11px;border-radius:10px;
-  font-size:13px;font-weight:600;font-family:'Jost',sans-serif;
+  font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;
   cursor:pointer;margin-top:8px;
   transition:background 0.15s,border-color 0.15s,transform 0.1s;
 }
@@ -236,6 +247,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 
   <!-- BRAND PANEL -->
   <aside class="brand-panel">
+    <div class="float-layer" id="brand-float-layer" aria-hidden="true"></div>
     <div class="brand-inner">
       <div class="brand-logo">
         <img src="Tastia-Restaurant-Logo.png" alt="Tastia Restaurant"
@@ -251,6 +263,7 @@ body{font-family:'Jost',sans-serif;background:var(--bg);min-height:100vh;}
 
   <!-- FORM PANEL -->
   <main class="form-panel">
+    <div class="float-layer" id="form-float-layer" aria-hidden="true"></div>
     <div class="card">
 
       <div class="form-header">
@@ -604,6 +617,48 @@ async function setPassword() {
   btn.textContent = 'All done! Redirecting…';
   exitCard('index.html', 200);
 }
+
+/* ── FLOATING BACKGROUND AVATARS ── */
+(function spawnFloats() {
+  const imgs = Array.from({length:12}, (_,i) => 'avatars/Staff'+(i+1)+'.png');
+  const anims = ['fd-a','fd-b','fd-c','fd-d','fd-e','fd-f'];
+
+  function populate(layerId, count, opMin, opMax, szMin, szMax, borderCol) {
+    const layer = document.getElementById(layerId);
+    if (!layer) return;
+    for (let i = 0; i < count; i++) {
+      const img = document.createElement('img');
+      img.className = 'float-av';
+      img.src = imgs[i % imgs.length];
+      img.alt = '';
+      const sz  = szMin + Math.random() * (szMax - szMin);
+      const x   = -8 + Math.random() * 116;
+      const y   = -8 + Math.random() * 116;
+      const dur = 16 + Math.random() * 32;
+      const del = -(Math.random() * dur);
+      const op  = opMin + Math.random() * (opMax - opMin);
+      const an  = anims[Math.floor(Math.random() * anims.length)];
+      img.style.cssText = [
+        `width:${sz.toFixed(1)}px`,
+        `height:${sz.toFixed(1)}px`,
+        `left:${x.toFixed(1)}%`,
+        `top:${y.toFixed(1)}%`,
+        `opacity:${op.toFixed(2)}`,
+        `border:2px solid ${borderCol}`,
+        `box-shadow:0 2px 10px rgba(0,0,0,0.14)`,
+        `animation:${an} ${dur.toFixed(1)}s ease-in-out ${del.toFixed(1)}s infinite`
+      ].join(';');
+      layer.appendChild(img);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Red brand panel — white-bordered, semi-visible on dark red
+    populate('brand-float-layer', 18, 0.13, 0.24, 42, 72, 'rgba(255,255,255,0.38)');
+    // Form panel — softer, behind the card
+    populate('form-float-layer',  26, 0.07, 0.15, 44, 74, 'rgba(183,28,28,0.22)');
+  });
+})();
 
 async function login() {
   const email = document.getElementById('login-email').value.trim();
