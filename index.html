@@ -777,12 +777,12 @@ function drawStyledQR(canvas, url) {
     ctx.fillStyle='#fff';fillRR(ctx,x+cell,y+cell,sz-cell*2,sz-cell*2,cr*0.55);
     ctx.fillStyle='#B71C1C';fillRR(ctx,x+cell*2,y+cell*2,sz-cell*4,sz-cell*4,cr*0.35);
   });
-  const ls=S*0.19, lx=(S-ls)/2, ly=(S-ls)/2;
-  ctx.fillStyle='#fff'; fillRR(ctx,lx-10,ly-10,ls+20,ls+20,14);
+  const ls=S*0.22, lx=(S-ls)/2, ly=(S-ls)/2;
+  ctx.fillStyle='#fff'; fillRR(ctx,lx-12,ly-12,ls+24,ls+24,16);
   const img = new Image();
   img.onload = () => ctx.drawImage(img,lx,ly,ls,ls);
   img.onerror = () => { const fb=new Image(); fb.onload=()=>ctx.drawImage(fb,lx,ly,ls,ls); fb.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(TASTIA_LOGO_SVG); };
-  img.src = 'logo.png';
+  img.src = 'justlogo.png';
 }
 function openQR(id) {
   const s = staff.find(x => x.id === id); if (!s) return;
