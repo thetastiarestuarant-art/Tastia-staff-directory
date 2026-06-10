@@ -28,7 +28,8 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--bg);min-height:100vh;
 
 /* ── BRAND PANEL ── */
 .brand-panel{
-  background:var(--dark);
+  background:white;
+  border-right:1px solid rgba(183,28,28,0.10);
   position:relative;overflow:hidden;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -39,14 +40,14 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--bg);min-height:100vh;
 .brand-panel::before{
   content:'';position:absolute;border-radius:50%;pointer-events:none;
   width:520px;height:520px;
-  background:radial-gradient(circle,rgba(183,28,28,0.35) 0%,transparent 65%);
-  top:-180px;left:-140px;filter:blur(48px);
+  background:radial-gradient(circle,rgba(183,28,28,0.07) 0%,transparent 65%);
+  top:-180px;left:-140px;filter:blur(56px);
   animation:orb-a 22s ease-in-out infinite alternate;
 }
 .brand-panel::after{
   content:'';position:absolute;border-radius:50%;pointer-events:none;
   width:380px;height:380px;
-  background:radial-gradient(circle,rgba(183,28,28,0.18) 0%,transparent 65%);
+  background:radial-gradient(circle,rgba(183,28,28,0.05) 0%,transparent 65%);
   bottom:-100px;right:-80px;filter:blur(44px);
   animation:orb-b 28s ease-in-out infinite alternate;
 }
@@ -55,19 +56,20 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--bg);min-height:100vh;
 .brand-inner{position:relative;z-index:1;text-align:center;animation:brand-rise 0.65s var(--ease-out-expo) 0.1s both;}
 @keyframes brand-rise{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 .brand-logo{
-  width:96px;height:96px;background:white;border-radius:20px;
+  width:104px;height:104px;background:white;border-radius:22px;
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto 28px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.28);
+  margin:0 auto 32px;
+  box-shadow:0 2px 0 rgba(183,28,28,0.06),0 8px 32px rgba(183,28,28,0.12),0 1px 3px rgba(0,0,0,0.06);
+  border:1px solid rgba(183,28,28,0.09);
   overflow:hidden;padding:10px;
 }
 .brand-logo img{width:100%;height:100%;object-fit:contain;}
 .brand-logo-fallback{font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--red);}
-.brand-name{font-family:var(--font-heading);font-size:28px;font-weight:700;color:white;margin-bottom:4px;letter-spacing:0.3px;}
-.brand-product{font-size:11px;font-weight:600;color:rgba(255,255,255,0.42);text-transform:uppercase;letter-spacing:2px;margin-bottom:36px;}
-.brand-rule{width:36px;height:2px;background:var(--red);border-radius:2px;margin:0 auto 28px;}
-.brand-tagline{font-size:14px;line-height:1.8;color:rgba(255,255,255,0.62);max-width:250px;margin:0 auto;}
-.brand-footer{position:absolute;bottom:28px;z-index:1;font-size:11px;font-weight:600;letter-spacing:1px;color:rgba(255,255,255,0.35);text-transform:uppercase;}
+.brand-name{font-family:var(--font-heading);font-size:29px;font-weight:700;color:var(--red);margin-bottom:5px;letter-spacing:0.2px;}
+.brand-product{font-size:10.5px;font-weight:700;color:rgba(183,28,28,0.45);text-transform:uppercase;letter-spacing:2.5px;margin-bottom:36px;}
+.brand-rule{width:36px;height:2.5px;background:var(--red);border-radius:2px;margin:0 auto 28px;opacity:0.7;}
+.brand-tagline{font-size:14px;line-height:1.85;color:rgba(139,16,16,0.6);max-width:240px;margin:0 auto;}
+.brand-footer{position:absolute;bottom:28px;z-index:1;font-size:10.5px;font-weight:700;letter-spacing:1.5px;color:rgba(183,28,28,0.35);text-transform:uppercase;}
 
 /* ── FORM PANEL ── */
 .form-panel{background:var(--bg);display:flex;align-items:center;justify-content:center;padding:40px 24px;min-height:100vh;}
@@ -211,7 +213,7 @@ body{font-family:'Nunito Sans',sans-serif;background:var(--bg);min-height:100vh;
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
   .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
-  .brand-panel{flex-direction:row;padding:0 20px;height:64px;justify-content:flex-start;gap:12px;animation:none;}
+  .brand-panel{flex-direction:row;padding:0 20px;height:64px;justify-content:flex-start;gap:12px;animation:none;border-right:none;border-bottom:1px solid rgba(183,28,28,0.12);}
   .brand-panel::before,.brand-panel::after{display:none;}
   .brand-inner{display:flex;align-items:center;gap:10px;animation:none;}
   .brand-logo{width:38px;height:38px;border-radius:10px;margin:0;box-shadow:none;padding:4px;}
