@@ -777,8 +777,8 @@ function drawStyledQR(canvas, url) {
     ctx.fillStyle='#fff';fillRR(ctx,x+cell,y+cell,sz-cell*2,sz-cell*2,cr*0.55);
     ctx.fillStyle='#B71C1C';fillRR(ctx,x+cell*2,y+cell*2,sz-cell*4,sz-cell*4,cr*0.35);
   });
-  const ls=S*0.22, lx=(S-ls)/2, ly=(S-ls)/2;
-  ctx.fillStyle='#fff'; fillRR(ctx,lx-12,ly-12,ls+24,ls+24,16);
+  const ls=S*0.30, lx=(S-ls)/2, ly=(S-ls)/2;
+  ctx.fillStyle='#fff'; fillRR(ctx,lx-14,ly-14,ls+28,ls+28,18);
   const img = new Image();
   img.onload = () => ctx.drawImage(img,lx,ly,ls,ls);
   img.onerror = () => { const fb=new Image(); fb.onload=()=>ctx.drawImage(fb,lx,ly,ls,ls); fb.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(TASTIA_LOGO_SVG); };
