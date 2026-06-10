@@ -96,29 +96,31 @@ body{font-family:'Nunito Sans',sans-serif;background:#FFF9F5;min-height:100vh;}
 .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
 
 /* ── STAFF CARD ── */
-.staff-card{background:white;border-radius:14px;border:1px solid var(--border);overflow:hidden;transition:all 0.2s;}
-.staff-card:hover{border-color:var(--red-accent);box-shadow:0 6px 20px rgba(183,28,28,0.12);transform:translateY(-2px);}
-.card-photo-area{height:180px;background:linear-gradient(160deg,#1A1A1A,#3A1015);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.card-photo-area img{width:100%;height:100%;object-fit:cover;object-position:center top;}
-.card-photo-initials{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:white;border:3px solid rgba(255,255,255,0.4);font-family:var(--font-heading);}
-.status-pip{position:absolute;top:10px;right:10px;width:10px;height:10px;border-radius:50%;border:2px solid white;}
+.staff-card{background:white;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(26,10,10,0.06),0 4px 16px rgba(26,10,10,0.08);transition:transform 180ms cubic-bezier(0.25,1,0.5,1),box-shadow 180ms cubic-bezier(0.25,1,0.5,1);display:flex;flex-direction:column;}
+.staff-card:hover{transform:translateY(-4px);box-shadow:0 2px 8px rgba(26,10,10,0.1),0 16px 40px rgba(183,28,28,0.18);}
+.card-header{height:96px;background:linear-gradient(140deg,#2D0A0A 0%,#B71C1C 100%);position:relative;flex-shrink:0;}
+.card-header::after{content:'';position:absolute;top:-50px;right:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(255,120,120,0.35) 0%,transparent 70%);pointer-events:none;}
+.card-avatar-wrap{position:absolute;bottom:-44px;left:50%;transform:translateX(-50%);width:88px;height:88px;border-radius:50%;background:white;border:3px solid #E8A830;overflow:hidden;box-shadow:0 4px 14px rgba(26,10,10,0.22);z-index:2;}
+.card-avatar-wrap img{width:100%;height:100%;object-fit:cover;object-position:center top;}
+.card-avatar-initials{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:white;font-family:var(--font-heading);}
+.status-pip{position:absolute;top:11px;right:11px;width:9px;height:9px;border-radius:50%;border:2px solid rgba(255,255,255,0.65);z-index:1;}
 .status-pip.active{background:#69f0ae;}.status-pip.inactive{background:#ef5350;}
-.card-info{padding:12px 14px 8px;}
-.card-name{font-weight:600;font-size:14px;color:var(--text-dark);font-family:var(--font-heading);letter-spacing:0.3px;}
-.card-role{font-size:12px;color:var(--text-muted);margin-top:2px;}
-.card-dept{display:inline-block;background:var(--red-light);color:var(--red);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px;}
-.card-actions{display:flex;gap:6px;padding:0 14px 14px;}
-.btn-sm{flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.15s;text-align:center;font-family:var(--font-body);}
-.btn-view{background:var(--red-light);color:var(--red);border-color:#F0DEDE;}
-.btn-view:hover{background:#F0DEDE;}
-.btn-qr{background:var(--gold-light);color:#A06020;border-color:#FFE0A0;}
-.btn-qr:hover{background:#FFE0A0;}
-.btn-id{background:#e3f2fd;color:#0277bd;border-color:#bbdefb;}
-.btn-id:hover{background:#bbdefb;}
-.btn-edit{background:#f3e5f5;color:#6a1b9a;border-color:#e1bee7;flex:0 0 auto;padding:7px 10px;}
-.btn-edit:hover{background:#e1bee7;}
-.btn-delete{background:#fde8e8;color:#b71c1c;border-color:#ffcdd2;flex:0 0 auto;padding:7px 10px;}
-.btn-delete:hover{background:#ffcdd2;}
+.card-body{padding:54px 16px 14px;text-align:center;flex:1;}
+.card-name{font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-dark);line-height:1.3;margin-bottom:4px;text-wrap:balance;min-height:2.6em;display:flex;align-items:flex-start;justify-content:center;}
+.card-role{font-size:12px;color:var(--text-muted);margin-bottom:9px;line-height:1.35;}
+.card-dept{display:inline-block;background:var(--red-light);color:var(--red);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;letter-spacing:0.2px;}
+.card-sep{height:1px;background:var(--border);margin:14px 0 0;}
+.card-action-row{display:grid;grid-template-columns:repeat(5,1fr);}
+.card-act{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 4px 9px;background:none;border:none;cursor:pointer;border-radius:0;color:var(--text-muted);transition:background 120ms ease-out,color 120ms ease-out;font-family:var(--font-body);}
+.card-act:hover{background:var(--red-light);color:var(--red);}
+.card-act.act-del:hover{background:#fde8e8;color:#b71c1c;}
+.card-act:first-child{border-radius:0 0 0 16px;}.card-act:last-child{border-radius:0 0 16px 0;}
+.ca-icon{width:16px;height:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ca-icon svg{display:block;width:16px;height:16px;}
+.ca-label{font-size:9px;font-weight:700;line-height:1;letter-spacing:0.3px;}
+@keyframes card-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.staff-card{animation:card-in 0.28s cubic-bezier(0.25,1,0.5,1) both;}
+@media(prefers-reduced-motion:reduce){.staff-card,.card-act{transition:none;animation:none;}}
 
 /* ── PROFILE VIEW ── */
 .profile-wrap{max-width:680px;margin:0 auto;padding:24px 20px;}
@@ -559,6 +561,15 @@ function updateStats() {
   document.getElementById('stat-inactive').textContent = staff.length - a;
 }
 
+/* ── CARD ICONS ── */
+const ICONS = {
+  profile:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  qr:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>`,
+  id:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
+  edit:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  del:`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`
+};
+
 /* ── CARDS ── */
 function renderCards() {
   const q = document.getElementById('search-input').value.toLowerCase();
@@ -572,24 +583,35 @@ function renderCards() {
   grid.innerHTML = list.map(s => {
     const ini = initials(s), col = avatarColor(s.id);
     const photoHTML = s.photo_url
-      ? `<img src="${s.photo_url}" alt="${esc(s.firstname)}" onerror="this.outerHTML='<div class=card-photo-initials style=background:${col}>${ini}</div>'">`
-      : `<div class="card-photo-initials" style="background:${col}">${ini}</div>`;
+      ? `<img src="${s.photo_url}${s._cacheBust||''}" alt="${esc(s.firstname)}" onerror="this.outerHTML='<div class=card-avatar-initials style=background:${col}>${ini}</div>'">`
+      : `<div class="card-avatar-initials" style="background:${col}">${ini}</div>`;
     return `<div class="staff-card">
-      <div class="card-photo-area">
-        ${photoHTML}
-        <div class="status-pip ${s.status}" title="${s.status === 'active' ? 'Active' : 'Inactive'}"><span class="sr-only">${s.status === 'active' ? 'Active' : 'Inactive'}</span></div>
+      <div class="card-header">
+        <div class="status-pip ${s.status}" title="${s.status==='active'?'Active':'Inactive'}"><span class="sr-only">${s.status==='active'?'Active':'Inactive'}</span></div>
+        <div class="card-avatar-wrap">${photoHTML}</div>
       </div>
-      <div class="card-info">
+      <div class="card-body">
         <div class="card-name">${esc(s.firstname)} ${esc(s.lastname)}</div>
         <div class="card-role">${esc(s.role)}</div>
         <div class="card-dept">${esc(s.dept)}</div>
       </div>
-      <div class="card-actions">
-        <button class="btn-sm btn-view" onclick="viewProfile('${esc(s.id)}')">Profile</button>
-        <button class="btn-sm btn-qr" onclick="openQR('${esc(s.id)}')">QR</button>
-        <button class="btn-sm btn-id" onclick="openIDCard('${esc(s.id)}')">${s.id_card_url ? 'ID Card' : '+ ID'}</button>
-        <button class="btn-sm btn-edit" onclick="editStaff('${esc(s.id)}')" aria-label="Edit ${esc(s.firstname)} ${esc(s.lastname)}">✎</button>
-        <button class="btn-sm btn-delete" onclick="deleteStaff('${esc(s.id)}')" aria-label="Delete ${esc(s.firstname)} ${esc(s.lastname)}">🗑</button>
+      <div class="card-sep"></div>
+      <div class="card-action-row">
+        <button class="card-act" onclick="viewProfile('${esc(s.id)}')" title="View Profile">
+          <span class="ca-icon">${ICONS.profile}</span><span class="ca-label">Profile</span>
+        </button>
+        <button class="card-act" onclick="openQR('${esc(s.id)}')" title="QR Code">
+          <span class="ca-icon">${ICONS.qr}</span><span class="ca-label">QR</span>
+        </button>
+        <button class="card-act" onclick="openIDCard('${esc(s.id)}')" title="ID Card">
+          <span class="ca-icon">${ICONS.id}</span><span class="ca-label">ID Card</span>
+        </button>
+        <button class="card-act" onclick="editStaff('${esc(s.id)}')" title="Edit">
+          <span class="ca-icon">${ICONS.edit}</span><span class="ca-label">Edit</span>
+        </button>
+        <button class="card-act act-del" onclick="deleteStaff('${esc(s.id)}')" title="Delete">
+          <span class="ca-icon">${ICONS.del}</span><span class="ca-label">Delete</span>
+        </button>
       </div>
     </div>`;
   }).join('');
